@@ -10,12 +10,25 @@ const Account = () => {
     const [records, setRecords] = useState([]);
     const [message, setMessage] = useState('');    
     const [editIndex, setEditIndex] = useState(null);
+    const formatDate = (dateString) => {
+        const date = new Date(dateString); // Convert to Date object
+        const day = date.getDate().toString().padStart(2, '0'); // Day part
+        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month part (months are 0-indexed, so add 1)
+        const year = date.getFullYear(); // Year part
+        
+        return `${day}-${month}-${year}`; // Return formatted date
+    };
     useEffect(() => {
         console.log(process.env.REACT_APP_API_URL); 
         fetch(`${process.env.REACT_APP_API_URL}/account`)
             .then((response) => response.json())
             .then((data) => {
-                setRecords(data);  // Set the records received from the API
+              //  setRecords(data);  // Set the records received from the API
+              const formattedRecords = data.map(record => ({
+                ...record,
+                formattedDate: formatDate(record.date), // Add the formatted date
+            }));
+            setRecords(formattedRecords);  // Set the formatted records
             })
             .catch((error) => {
                 console.log('Error fetching data:', error);
@@ -27,7 +40,8 @@ const Account = () => {
         e.preventDefault();
         const apiUrl = `${process.env.REACT_APP_API_URL}/account`
         console.log('API URL:', process.env.REACT_APP_API_URL);
-        const newRecord = { date, dcc, vcj, dvs, sc };
+        const formattedDate = formatDate(date);
+        const newRecord = { date:formattedDate, dcc, vcj, dvs, sc };
         fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -191,7 +205,7 @@ const Account = () => {
                         {records.map((record, index) => (
                             <tr key={index}>
                                 <td>{index + 1}</td>
-                                <td>{record.date}</td>
+                                <td>{record.formattedDate}</td>
                                 <td>{record.dcc}</td>
                                 <td>{record.vcj}</td>
                                 <td>{record.dvs}</td>
