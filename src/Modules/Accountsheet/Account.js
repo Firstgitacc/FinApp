@@ -46,7 +46,7 @@ const Account = () => {
         const formattedDate = formatDate(date);
         const apiUrl = `${process.env.REACT_APP_API_URL}/account`
         console.log('API URL:', process.env.REACT_APP_API_URL);
-        const newRecord = { formattedDate, dcc, vcj, dvs, sc };
+        const newRecord = { date:formattedDate, dcc, vcj, dvs, sc };
         if (editIndex !== null) {
             const recordId = records[editIndex].id;
             fetch(`${apiUrl}/${recordId}`, {
