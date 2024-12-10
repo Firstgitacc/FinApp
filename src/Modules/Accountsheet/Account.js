@@ -18,6 +18,11 @@ const Account = () => {
 
         return `${day}-${month}-${year}`; // Return formatted date
     };
+    // Convert DD-MM-YYYY to YYYY-MM-DD for input field
+    const convertToInputDateFormat = (dateString) => {
+        const [day, month, year] = dateString.split('-'); // Split the DD-MM-YYYY string
+        return `${year}-${month}-${day}`; // Return in the YYYY-MM-DD format
+    };
     useEffect(() => {
         console.log(process.env.REACT_APP_API_URL);
         fetch(`${process.env.REACT_APP_API_URL}/account`)
@@ -77,7 +82,7 @@ const Account = () => {
                         setRecords(updatedRecords);
                         setMessage('Record updated successfully!');
                         setEditIndex(null); // Reset edit mode
-                    } 
+                    }
                     else {
                         // If not editing, add a new record
                         setRecords([...records, newRecord]);
@@ -127,7 +132,8 @@ const Account = () => {
 
     const handleEdit = (index) => {
         const record = records[index];
-        setDate(record.date);
+        const correctDateFormat = convertToInputDateFormat(record.formattedDate);
+        setDate(correctDateFormat);
         setDcc(record.dcc);
         setVcj(record.vcj);
         setDvs(record.dvs);
