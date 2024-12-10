@@ -8,27 +8,27 @@ const Account = () => {
     const [dvs, setDvs] = useState('');
     const [sc, setSc] = useState('');
     const [records, setRecords] = useState([]);
-    const [message, setMessage] = useState('');    
+    const [message, setMessage] = useState('');
     const [editIndex, setEditIndex] = useState(null);
     const formatDate = (dateString) => {
         const date = new Date(dateString); // Convert to Date object
         const day = date.getDate().toString().padStart(2, '0'); // Day part
         const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month part (months are 0-indexed, so add 1)
         const year = date.getFullYear(); // Year part
-        
+
         return `${day}-${month}-${year}`; // Return formatted date
     };
     useEffect(() => {
-        console.log(process.env.REACT_APP_API_URL); 
+        console.log(process.env.REACT_APP_API_URL);
         fetch(`${process.env.REACT_APP_API_URL}/account`)
             .then((response) => response.json())
             .then((data) => {
-              //  setRecords(data);  // Set the records received from the API
-              const formattedRecords = data.map(record => ({
-                ...record,
-                formattedDate: formatDate(record.date), // Add the formatted date
-            }));
-            setRecords(formattedRecords);  // Set the formatted records
+                //  setRecords(data);  // Set the records received from the API
+                const formattedRecords = data.map(record => ({
+                    ...record,
+                    formattedDate: formatDate(record.date), // Add the formatted date
+                }));
+                setRecords(formattedRecords);  // Set the formatted records
             })
             .catch((error) => {
                 console.log('Error fetching data:', error);
@@ -38,33 +38,59 @@ const Account = () => {
     }, []);
     const handleSubmit = (e) => {
         e.preventDefault();
+        const formattedDate = formatDate(date);
         const apiUrl = `${process.env.REACT_APP_API_URL}/account`
         console.log('API URL:', process.env.REACT_APP_API_URL);
-        const formattedDate = formatDate(date);
-        const newRecord = { date:formattedDate, dcc, vcj, dvs, sc };
-        fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newRecord),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                if (editIndex !== null) {
-                    const updatedRecords = [...records]
-                    updatedRecords[editIndex] = newRecord;
+        const newRecord = { formattedDate, dcc, vcj, dvs, sc };
+        if (editIndex !== null) {
+            const recordId = records[editIndex].id;
+            fetch(`${apiUrl}/${recordId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRecord),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    const updatedRecords = [...records];
+                    updatedRecords[editIndex] = { ...newRecord, id: recordId }; // Keep the original record's ID
                     setRecords(updatedRecords);
                     setMessage('Record updated successfully!');
                     setEditIndex(null); // Reset edit mode
-                } else {
-                      // If not editing, add a new record
-                setRecords([...records, newRecord]);
-                setMessage('Record added successfully!');
-                }
+                })
+                .catch((error) => {
+                    console.log('Error:', error);
+                    setMessage('Failed to update the record');
+                });
+
+        } else {
+            // Create a new record
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRecord),
             })
-            .catch((error) => {
-                console.log('Error:', error);
-                setMessage('Failed to submit the form');
-            });
+                .then((response) => response.json())
+                .then((data) => {
+                    if (editIndex !== null) {
+                        const updatedRecords = [...records]
+                        updatedRecords[editIndex] = newRecord;
+                        setRecords(updatedRecords);
+                        setMessage('Record updated successfully!');
+                        setEditIndex(null); // Reset edit mode
+                    } 
+                    else {
+                        // If not editing, add a new record
+                        setRecords([...records, newRecord]);
+                        setMessage('Record added successfully!');
+                    }
+                })
+                .catch((error) => {
+                    console.log('Error:', error);
+                    setMessage('Failed to submit the form');
+                });
+        }
+
+
         // setRecords([...records, newRecord]);
         // setMessage('Record added successfully!');
         clearForm();
@@ -105,7 +131,7 @@ const Account = () => {
         setDcc(record.dcc);
         setVcj(record.vcj);
         setDvs(record.dvs);
-        setSc(record.sc);        
+        setSc(record.sc);
         setEditIndex(index);
     };
 
@@ -139,7 +165,7 @@ const Account = () => {
                         <input
                             type="number"
                             className="form-control"
-                            placeholder="Dailykathakarchu"
+                            placeholder="Daily katha karchu"
                             value={dcc}
                             onChange={handleDccChange}
                             required
@@ -153,7 +179,7 @@ const Account = () => {
                         <input
                             type="number"
                             className="form-control"
-                            placeholder="VCJ"
+                            placeholder="Vaddila katha Jama"
                             value={vcj}
                             onChange={handleVcjChange}
                             required
@@ -164,7 +190,7 @@ const Account = () => {
                         <input
                             type="number"
                             className="form-control"
-                            placeholder="DVS"
+                            placeholder="Daily vasulu"
                             value={dvs}
                             onChange={(e) => setDvs(e.target.value)}
                             required
@@ -177,7 +203,7 @@ const Account = () => {
                     <input
                         type="text"
                         className="form-control"
-                        placeholder="SC"
+                        placeholder="Sadar katha karchu"
                         value={sc}
                         onChange={(e) => setSc(e.target.value)}
                         required
