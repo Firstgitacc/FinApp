@@ -12,7 +12,10 @@
     animation: App-logo-spin infinite 20s linear;
   }
 }
-
+.highlight {
+  background-color: #ffff99; /* Light yellow color for highlighting */
+  border: 2px solid #ffcc00; /* Add a border to make it more obvious */
+}
 .App-header {
   background-color: #282c34;
   min-height: 100vh;

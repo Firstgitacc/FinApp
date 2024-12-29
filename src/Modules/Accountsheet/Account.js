@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap CSS is imported
+import 'bootstrap/dist/css/bootstrap.min.css';
+import moment from 'moment';
 
-const Account = () => {
+const Account = ({ record, onSubmit }) => {
     const [date, setDate] = useState('');
     const [dcc, setDcc] = useState('');
     const [vcj, setVcj] = useState('');
@@ -10,25 +11,31 @@ const Account = () => {
     const [records, setRecords] = useState([]);
     const [message, setMessage] = useState('');
     const [editIndex, setEditIndex] = useState(null);
+    const [touchedFields, setTouchedFields] = useState({
+        date: false,
+        dcc: false,
+        vcj: false,
+        dvs: false,
+        sc: false,
+    });
     const formatDate = (dateString) => {
-        const date = new Date(dateString); // Convert to Date object
-        const day = date.getDate().toString().padStart(2, '0'); // Day part
-        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month part (months are 0-indexed, so add 1)
-        const year = date.getFullYear(); // Year part
-
-        return `${day}-${month}-${year}`; // Return formatted date
+        const date = new Date(dateString);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${year}-${month}-${day}`; // Return date in YYYY-MM-DD format
     };
-    // Convert DD-MM-YYYY to YYYY-MM-DD for input field
+
     const convertToInputDateFormat = (dateString) => {
         const [day, month, year] = dateString.split('-'); // Split the DD-MM-YYYY string
         return `${year}-${month}-${day}`; // Return in the YYYY-MM-DD format
     };
+
     useEffect(() => {
         console.log(process.env.REACT_APP_API_URL);
         fetch(`${process.env.REACT_APP_API_URL}/account`)
             .then((response) => response.json())
             .then((data) => {
-                //  setRecords(data);  // Set the records received from the API
                 const formattedRecords = data.map(record => ({
                     ...record,
                     formattedDate: formatDate(record.date), // Add the formatted date
@@ -41,14 +48,23 @@ const Account = () => {
                 clearMessageAfterDelay();
             });
     }, []);
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        const formattedDate = formatDate(date);
-        const apiUrl = `${process.env.REACT_APP_API_URL}/account`
-        console.log('API URL:', process.env.REACT_APP_API_URL);
-        const newRecord = { date:formattedDate, dcc, vcj, dvs, sc };
+
+        // Ensure the date is correctly formatted before submission
+        const formattedDate = moment(date).format('YYYY-MM-DD'); // Ensure the date is in 'YYYY-MM-DD' format
+        const apiUrl = `${process.env.REACT_APP_API_URL}/account`;
+
+        const newRecord = { date: formattedDate, dcc, vcj, dvs, sc };
+
         if (editIndex !== null) {
-            const recordId = records[editIndex].id;
+            const recordId = records[editIndex]?._id;
+            if (!recordId) {
+                console.error('Record ID is missing');
+                setMessage('Failed to update: Record ID is missing');
+                return;  // Prevent sending a request without an ID
+            }
             fetch(`${apiUrl}/${recordId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -56,9 +72,10 @@ const Account = () => {
             })
                 .then((response) => response.json())
                 .then((data) => {
+                    // Update the records array with the updated record
                     const updatedRecords = [...records];
-                    updatedRecords[editIndex] = { ...newRecord, id: recordId }; // Keep the original record's ID
-                    setRecords(updatedRecords);
+                    updatedRecords[editIndex] = { ...newRecord, _id: recordId, formattedDate }; // Update with new formatted date
+                    setRecords(updatedRecords); // Set the updated records
                     setMessage('Record updated successfully!');
                     setEditIndex(null); // Reset edit mode
                 })
@@ -68,7 +85,6 @@ const Account = () => {
                 });
 
         } else {
-            // Create a new record
             fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -76,18 +92,10 @@ const Account = () => {
             })
                 .then((response) => response.json())
                 .then((data) => {
-                    if (editIndex !== null) {
-                        const updatedRecords = [...records]
-                        updatedRecords[editIndex] = newRecord;
-                        setRecords(updatedRecords);
-                        setMessage('Record updated successfully!');
-                        setEditIndex(null); // Reset edit mode
-                    }
-                    else {
-                        // If not editing, add a new record
-                        setRecords([...records, newRecord]);
-                        setMessage('Record added successfully!');
-                    }
+                    // Add the new record with the formatted date
+                    const newRecordWithDate = { ...newRecord, _id: data._id, formattedDate }; // Assuming response contains the ID
+                    setRecords([...records, newRecordWithDate]); // Update the records state
+                    setMessage('Record added successfully!');
                 })
                 .catch((error) => {
                     console.log('Error:', error);
@@ -95,9 +103,6 @@ const Account = () => {
                 });
         }
 
-
-        // setRecords([...records, newRecord]);
-        // setMessage('Record added successfully!');
         clearForm();
         clearMessageAfterDelay();
     };
@@ -119,26 +124,31 @@ const Account = () => {
     const handleDccChange = (e) => {
         const Dailykathakarchulu = e.target.value;
         setDcc(Dailykathakarchulu);
-
-        // Multiply the entered value by 0.16667 and add to VCJ
         const newvcj = (Dailykathakarchulu * 0.16667).toFixed(0);
         setVcj(newvcj);
     };
 
-    const handleVcjChange = (e) => {
-        const vaddilakathakarchulu = e.target.value;
-        setVcj(vaddilakathakarchulu);
-    };
-
     const handleEdit = (index) => {
         const record = records[index];
-        const correctDateFormat = convertToInputDateFormat(record.formattedDate);
-        setDate(correctDateFormat);
+        if (!record._id) {
+            console.error('Record ID is missing');
+            setMessage('Record ID is missing');
+            return;
+        }
+        const formattedDate = moment(record.date).format('YYYY-MM-DD');
+        setDate(formattedDate);
         setDcc(record.dcc);
         setVcj(record.vcj);
         setDvs(record.dvs);
         setSc(record.sc);
         setEditIndex(index);
+        setTouchedFields({
+            date: false,
+            dcc: false,
+            vcj: false,
+            dvs: false,
+            sc: false,
+        });
     };
 
     const handleDelete = (index) => {
@@ -147,7 +157,20 @@ const Account = () => {
         setMessage('Record deleted successfully');
         clearMessageAfterDelay();
     };
+    const handleInputChange = (e, field) => {
+        const { value } = e.target;
+        // Update the state for the specific field
+        if (field === 'date') setDate(value);
+        else if (field === 'dcc') setDcc(value);
+        else if (field === 'vcj') setVcj(value);
+        else if (field === 'dvs') setDvs(value);
+        else if (field === 'sc') setSc(value);
 
+        // Mark this field as touched
+        setTouchedFields((prev) => ({ ...prev, [field]: true }));
+    };
+    //const highlightClass = (field) => (editIndex !== null && field ? 'highlight' : '');
+    const highlightClass = (field) => (editIndex !== null && !touchedFields[field] ? 'highlight' : '');
     return (
         <div className="container mt-5">
             <h2 className="text-center mb-4">Account Sheet</h2>
@@ -160,7 +183,7 @@ const Account = () => {
                         <label className="form-label">Date</label>
                         <input
                             type="date"
-                            className="form-control"
+                            className={`form-control ${highlightClass('date')}`} // Add highlight class
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
                             required
@@ -187,7 +210,7 @@ const Account = () => {
                             className="form-control"
                             placeholder="Vaddila katha Jama"
                             value={vcj}
-                            onChange={handleVcjChange}
+                            onChange={(e) => setVcj(e.target.value)}
                             required
                         />
                     </div>
@@ -208,10 +231,10 @@ const Account = () => {
                     <label className="form-label">SC</label>
                     <input
                         type="text"
-                        className="form-control"
+                        className={`form-control ${highlightClass('sc')}`}
                         placeholder="Sadar katha karchu"
                         value={sc}
-                        onChange={(e) => setSc(e.target.value)}
+                        onChange={(e) => handleInputChange(e, 'sc')}
                         required
                     />
                 </div>
