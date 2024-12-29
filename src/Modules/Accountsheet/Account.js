@@ -25,12 +25,12 @@ const Account = ({ record, onSubmit }) => {
         const year = date.getFullYear();
         return `${year}-${month}-${day}`; // Return date in YYYY-MM-DD format
     };
-
-    const convertToInputDateFormat = (dateString) => {
-        const [day, month, year] = dateString.split('-'); // Split the DD-MM-YYYY string
-        return `${year}-${month}-${day}`; // Return in the YYYY-MM-DD format
-    };
-
+/* eslint-disable no-unused-vars */
+    // const convertToInputDateFormat = (dateString) => {
+    //     const [day, month, year] = dateString.split('-'); // Split the DD-MM-YYYY string
+    //     return `${year}-${month}-${day}`; // Return in the YYYY-MM-DD format
+    // };
+/* eslint-enable no-unused-vars */
     useEffect(() => {
         console.log(process.env.REACT_APP_API_URL);
         fetch(`${process.env.REACT_APP_API_URL}/account`)
