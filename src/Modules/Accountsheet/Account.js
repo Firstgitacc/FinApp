@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import moment from 'moment';
+import * as XLSX from 'xlsx';
 
 const Account = ({ record, onSubmit }) => {
     const [date, setDate] = useState('');
@@ -171,6 +172,23 @@ const Account = ({ record, onSubmit }) => {
     };
     //const highlightClass = (field) => (editIndex !== null && field ? 'highlight' : '');
     const highlightClass = (field) => (editIndex !== null && !touchedFields[field] ? 'highlight' : '');
+         // Function to export data to Excel
+    const exportToExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(records.map(record => ({
+            'Serial Number': records.indexOf(record) + 1,
+            'Date': record.formattedDate,
+            'DCC': record.dcc,
+            'VCJ': record.vcj,
+            'DVS': record.dvs,
+            'SC': record.sc,
+        })));
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Records');
+        
+        // Export the Excel file
+        XLSX.writeFile(workbook, 'Records.xlsx');
+    };
     return (
         <div className="container mt-5">
             <h2 className="text-center mb-4">Account Sheet</h2>
@@ -244,6 +262,9 @@ const Account = ({ record, onSubmit }) => {
 
             <div className="mt-5">
                 <h3>Records</h3>
+                <button onClick={exportToExcel} className="btn btn-primary mb-3">
+                    Export to Excel
+                </button>
                 <table className="table table-bordered table-striped">
                     <thead>
                         <tr>
