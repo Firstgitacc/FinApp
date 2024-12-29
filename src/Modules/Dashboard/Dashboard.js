@@ -8,7 +8,6 @@ const Dashboard = () => {
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
     const [records, setRecords] = useState([]);
-    const [editIndex, setEditIndex] = useState(null);
     const [message, setMessage] = useState('');
     const formattedFromDate = moment(fromDate).format('YYYY-MM-DD');
     const formattedToDate = moment(toDate).format('YYYY-MM-DD');
