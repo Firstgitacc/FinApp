@@ -9,8 +9,6 @@ const Dashboard = () => {
     const [toDate, setToDate] = useState('');
     const [records, setRecords] = useState([]);
     const [message, setMessage] = useState('');
-    const formattedFromDate = moment(fromDate).format('YYYY-MM-DD');
-    const formattedToDate = moment(toDate).format('YYYY-MM-DD');
     const [editId, setEditId] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
     const [popupRecord, setPopupRecord] = useState(null);
