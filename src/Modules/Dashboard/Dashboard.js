@@ -153,6 +153,8 @@ const Dashboard = () => {
     };
 
     const handleNameClick = (record) => {
+        // Reset additional rows to only the default row when opening the popup
+    setAdditionalRows([{ date: '', amount: '' }]);
         setPopupRecord(record);
         setShowPopup(true);
     };
@@ -174,19 +176,59 @@ const Dashboard = () => {
 
     const handleInputChange = (e, index, field) => {
         const newRows = [...additionalRows];
-        newRows[index][field] = e.target.value;
+        if (field === 'date') {
+            // Ensure the date is in the correct format before storing it in the state
+            newRows[index][field] = moment(e.target.value).format('YYYY-MM-DD');
+        } else {
+            newRows[index][field] = e.target.value;
+        }
         setAdditionalRows(newRows);
     };
 
-    const handleSaveChanges = () => {
-        // Combine the original record with the new rows
-        const updatedRecord = {
-            ...popupRecord,
-            additionalRows: additionalRows // Add the new rows to the record
-        };
-        console.log("Updated Record:", updatedRecord);
-        setShowPopup(false); // Close the modal
+const handleSaveChanges = () => {
+    // Combine the original record with the new rows
+    const updatedRecord = {
+        ...popupRecord,
+        additionalRows: additionalRows.map(row => ({
+            date: new Date(row.date).toISOString(),
+            amount: Number(row.amount)
+        })),
+        fromDate: new Date(popupRecord.fromDate).toISOString(),   // Ensure fromDate is ISO format
+        toDate: new Date(popupRecord.toDate).toISOString(),  
     };
+    
+    console.log("Updated record:", updatedRecord);
+    console.log("ss", popupRecord._id); // Make sure this is a valid ObjectId string
+
+    // Make an API call to update the record on the server
+    fetch(`${process.env.REACT_APP_API_URL}/dashboard/Fn-dashboard/${popupRecord._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedRecord), // Send the updated data
+    })
+    .then((response) => {
+        if (!response.ok) {
+            throw new Error('Failed to save changes');
+        }
+        return response.json();
+    })
+    .then((updatedData) => {
+        // Update the state to reflect the saved changes
+        const updatedRecords = records.map((record) =>
+            record._id === updatedData._id ? updatedData : record
+        );
+        setRecords(updatedRecords);
+        setMessage('Changes saved successfully!');
+        clearMessageAfterDelay();
+        setShowPopup(false);
+    })
+    .catch((error) => {
+        console.log('Error saving changes:', error);
+        setMessage('Failed to save changes');
+        setMessage(`Failed to save changes: ${error.message || 'Unknown error'}`); 
+        clearMessageAfterDelay();
+    });
+};
 
     return (
         <div className="container mt-4">
