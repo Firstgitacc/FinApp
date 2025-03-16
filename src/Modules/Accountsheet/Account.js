@@ -29,7 +29,7 @@ const Account = ({ record, onSubmit }) => {
     const [numberInput, setNumberInput] = useState('');
     const [totalSum, setTotalSum] = useState(0);
     const [finalAmount, setFinalAmount] = useState('');
-    const [baseAmount, setBaseAmount] = useState(808362);
+    const [baseAmount, setBaseAmount] = useState(10000);
 
     useEffect(() => {
         console.log(process.env.REACT_APP_API_URL);
