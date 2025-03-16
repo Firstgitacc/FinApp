@@ -36,7 +36,7 @@ const Account = ({ record, onSubmit }) => {
         const savedBaseAmount = localStorage.getItem('baseAmount');
     const initialBaseAmount = savedBaseAmount && !isNaN(parseFloat(savedBaseAmount)) 
         ? parseFloat(savedBaseAmount) 
-        : 808362; // Fallback to default if invalid or not available
+        : 10000; // Fallback to default if invalid or not available
 
     setBaseAmount(initialBaseAmount); // Set the base amount from localStorage or default
     console.log("Base Amount on Load:", initialBaseAmount);
