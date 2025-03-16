@@ -293,7 +293,7 @@ const Account = ({ record, onSubmit }) => {
                     type="text"
                     className="form-control"
                     value={finalAmount}
-                    disabled
+                    
                 />
             </div>
             <form onSubmit={handleSubmit}>
